@@ -109,6 +109,14 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'api.User'
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # Simple JWT nos proporciona vistas listas para usar que manejan
+        # de forma segura el inicio de sesión y la renovación del token.
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
 

@@ -17,6 +17,19 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from api.views import MyTokenObtainPairView
+
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # Endpoint de inicio de sesión (Devuelve Token de Acceso y de Refresco)
+    path('api/auth/login/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+
+    # Endpoint para obtener un nuevo token de acceso cuando el actual expire
+    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
