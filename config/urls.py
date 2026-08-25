@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from api.views import MyTokenObtainPairView
+from api.views import MyTokenObtainPairView, RegisterView
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -32,4 +32,7 @@ urlpatterns = [
 
     # Endpoint para obtener un nuevo token de acceso cuando el actual expire
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # Endpoint de registro
+    path('api/auth/register/', RegisterView.as_view(), name='auth_register'),
 ]
