@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
+from .models import User, Resource, Booking
+
 User = get_user_model()
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -57,3 +59,17 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
 
         return user
+
+
+class ResourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resource
+        fields = ['id', 'name', 'capacity', 'active', 'owner']
+        # El propietario se asignará automáticamente en la vista, así que lo hacemos de solo lectura
+        read_only_fields = ['owner']
+
+class BookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = ['id', 'resource', 'client', 'start_date', 'end_date', 'state', 'created_at']
+        read_only_fields = ['client', 'state', 'created_at']

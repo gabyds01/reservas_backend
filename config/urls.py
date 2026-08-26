@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from api.views import MyTokenObtainPairView, RegisterView
+from api.views import MyTokenObtainPairView, RegisterView, CheckAvailabilityView
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -35,4 +35,7 @@ urlpatterns = [
 
     # Endpoint de registro
     path('api/auth/register/', RegisterView.as_view(), name='auth_register'),
+
+    # Endpoint de consultad disponibilidad
+    path('api/resource/availability/', CheckAvailabilityView.as_view(), name='check_availability'),
 ]
