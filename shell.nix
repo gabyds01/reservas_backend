@@ -18,13 +18,19 @@ pkgs.mkShellNoCC {
     }
     trap cleanup_postgres EXIT
 
-    # 2. Creación condicional del venv con uv
+    # 2. Iniciar PostgreSQL si no está activo
+    if ! pg_ctl -D "$PWD/.postgres" status > /dev/null 2>&1; then
+      echo "Iniciando PostgreSQL local…"
+      pg_ctl -D "$PWD/.postgres" -l "$PWD/.postgres/logfile" start
+    fi
+
+    # 3. Creación condicional del venv con uv
     if [ ! -d ".venv" ]; then
       echo "No se encontró .venv. Creando entorno virtual bare..."
       uv init --bare
     fi
 
-    # 3. Activación del entorno virtual
+    # 4. Activación del entorno virtual
     if [ -f ".venv/bin/activate" ]; then
       source .venv/bin/activate
     else
