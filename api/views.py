@@ -12,6 +12,8 @@ from django.contrib.auth import get_user_model
 
 from django.db import transaction
 
+from django.shortcuts import get_object_or_404
+
 from .models import Resource, Availability, Booking
 
 from .serializers import RegisterSerializer, MyTokenObtainPairSerializer, BookingSerializer
@@ -216,3 +218,32 @@ class CreateBookingView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class HistoryBookingView(generics.ListAPIView):
+    serializer_class = BookingSerializer
+
+    # solo usuarios autenticados
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # filtramos las reservas del usuario autenticado
+        return Booking.objects.filter(client=self.request.user)
+
+class CancelBookingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk, *args, **kwargs):
+        # 1. Buscamos la reserva utilizando su clave primaria
+        booking = get_object_or_404(Booking, id=pk)
+
+        # 2. Verificamos que el usuario autenticado es el cliente de la reserva
+        if booking.client != request.user:
+            return Response({'error': 'No tienes permiso para cancelar esta reserva'}, status=status.HTTP_403_FORBIDDEN)
+
+        # 3. Cancelación lógica
+        booking.state = Booking.CANCELED
+        booking.save()
+
+        # 4. Retornamos el objeto actualizado
+        serializer = BookingSerializer(booking)
+        return Response(serializer.data, status=status.HTTP_200_OK)

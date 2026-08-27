@@ -17,12 +17,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from api.views import MyTokenObtainPairView, RegisterView, CheckAvailabilityView, CreateBookingView
-
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
+from api.views import (
+    MyTokenObtainPairView,
+    RegisterView,
+    CheckAvailabilityView,
+    CreateBookingView,
+    CancelBookingView,
+    HistoryBookingView
 )
+
+from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -41,4 +45,10 @@ urlpatterns = [
 
     # Endpoint de creación de reserva
     path('api/booking/', CreateBookingView.as_view(), name='create_booking'),
+
+    # Endpoint de cancelación de reserva
+    path('api/booking/<int:pk>/cancel/', CancelBookingView.as_view(), name='cancel_booking'),
+
+    # Endpoint de historial de reservas
+    path('api/booking/me/', HistoryBookingView.as_view(), name='history_booking'),
 ]
