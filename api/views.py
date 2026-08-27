@@ -1,4 +1,3 @@
-from datetime import datetime
 from django.utils.dateparse import parse_datetime
 
 from rest_framework import generics, status
@@ -7,13 +6,15 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from rest_framework.response import Response
 
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from django.contrib.auth import get_user_model
 
+from django.db import transaction
+
 from .models import Resource, Availability, Booking
 
-from .serializers import RegisterSerializer, MyTokenObtainPairSerializer
+from .serializers import RegisterSerializer, MyTokenObtainPairSerializer, BookingSerializer
 
 User = get_user_model()
 
@@ -135,3 +136,83 @@ class CheckAvailabilityView(APIView):
         ]
 
         return Response(result, status=status.HTTP_200_OK)
+
+class CreateBookingView(APIView):
+    # Obligatorio estar logueado para reservar
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        # 1. Extraer datos del request con query params
+        resource_id = request.query_params.get('resource_id')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        # validaciones de entrada
+        if not resource_id or not start_date or not end_date:
+            return Response({'error': 'Faltan datos (resource_id, start_date, end_date)'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # parseamos las fechas
+        start_date = parse_datetime(start_date)
+        end_date = parse_datetime(end_date)
+
+        # validaciones de fechas
+        if not start_date or not end_date or start_date >= end_date:
+            return Response({'error': 'Deben existir los campos start_date y end_date, y start_date debe ser anterior a end_date'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. Inicio de la transacción atómica
+        try:
+            with transaction.atomic():
+                # Obtenemos el recurso aplicando el bloqueo pesimista
+                # (select_for_update) para evitar concurrencia
+                try:
+                    resource = Resource.objects.select_for_update().get(id=resource_id, active=True)
+                except Resource.DoesNotExist:
+                    return Response({'error': 'Recurso no encontrado o inactivo'}, status=status.HTTP_404_NOT_FOUND)
+
+                # 3. Verificar dispoinibilidad BASE, (¿El HOST tiene recursos disponibles en las fechas solicitadas?)
+                is_available = Availability.objects.filter(
+                    resource=resource,
+                    state=Availability.AVAILABLE,
+                    start_date__lte=start_date,
+                    end_date__gte=end_date,
+                ).exists()
+
+                # El HOST tiene este horario bloqueado?
+
+                is_disabled = Availability.objects.filter(
+                    resource=resource,
+                    state=Availability.DISABLED,
+                    end_date__gt=start_date,
+                    start_date__lt=end_date,
+                ).exists()
+
+                if not is_available or is_disabled:
+                    return Response({'error': 'El recurso no está disponible en las fechas solicitadas'}, status=status.HTTP_409_CONFLICT)
+
+                # 4. Evitar solpamientos (Ya existe una reserva confirmada o pendiente?)
+                # excluimos la que estan canceladas
+                exist_reservation = Booking.objects.filter(
+                    resource=resource,
+                    end_date__gt=start_date,
+                    start_date__lt=end_date,
+                ).exclude(state=Booking.CANCELED).exists()
+
+                if exist_reservation:
+                    return Response({'error': 'El recurso no está disponible en las fechas solicitadas'}, status=status.HTTP_409_CONFLICT)
+
+                # 5. CREAR la reserva si todo es valido
+                # El cliente se asigna automáticamente a partir del usuario autenticado en la petición (request.user)
+                booking = Booking.objects.create(
+                    resource=resource,
+                    client=request.user,
+                    start_date=start_date,
+                    end_date=end_date,
+                    state=Booking.CONFIRMED
+                )
+
+                # Serializamos para devolver la respuesta exitosa
+                serializer = BookingSerializer(booking)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
