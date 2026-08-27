@@ -1,0 +1,123 @@
+# =============================================================================
+# .gitignore — Template para proyectos Django + PostgreSQL
+# Entorno: NixOS / nix-shell  ·  Gestor de paquetes: uv
+# =============================================================================
+
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# ─── Entorno virtual (uv / venv / virtualenv) ───────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ─── Distribución / Empaquetado ──────────────────────────────────────────────
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+sdist/
+wheels/
+
+# ─── uv (gestor de dependencias) ─────────────────────────────────────────────
+# El lockfile se puede incluir o excluir según la política del equipo.
+# Comentar la línea siguiente si quieres versionarlo:
+uv.lock
+
+# ─── Django ──────────────────────────────────────────────────────────────────
+# Base de datos SQLite de desarrollo (fallback si no se usa PostgreSQL)
+db.sqlite3
+db.sqlite3-journal
+
+# Archivos de colección de estáticos (generados por collectstatic)
+staticfiles/
+static_collected/
+
+# Archivos de media subidos por usuarios
+media/
+
+# Archivo de secret key local (si se externaliza)
+secret_key.txt
+
+# ─── PostgreSQL local (data dir embebido en el proyecto) ─────────────────────
+.postgres/
+
+# Logs y archivos de estado de PostgreSQL
+postmaster.pid
+*.log
+
+# ─── Variables de entorno y secretos ─────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─── Logs generales ─────────────────────────────────────────────────────────
+logfile
+*.log
+logs/
+
+# ─── Testing / Cobertura ────────────────────────────────────────────────────
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.pytest_cache/
+.tox/
+nosetests.xml
+
+# ─── Tipado estático / Linters ───────────────────────────────────────────────
+.mypy_cache/
+.pytype/
+.ruff_cache/
+.dmypy.json
+dmypy.json
+
+# ─── Nix ─────────────────────────────────────────────────────────────────────
+result
+result-*
+
+# ─── IDEs y editores ────────────────────────────────────────────────────────
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm / JetBrains
+.idea/
+*.iml
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+\#*\#
+.#*
+
+# ─── Sistema operativo ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.bak
+*.tmp
+
+# ─── Docker (si se incorpora en el futuro) ──────────────────────────────────
+# Descomentar cuando el proyecto use Docker:
+# docker-compose.override.yml
+
+# ─── Celery (si se incorpora en el futuro) ──────────────────────────────────
+celerybeat-schedule
+celerybeat.pid
+
+# ─── Jupyter Notebooks (si se usan para exploración) ────────────────────────
+.ipynb_checkpoints/
+
+# ─── Gemini / AI tooling ────────────────────────────────────────────────────
+.gemini/
